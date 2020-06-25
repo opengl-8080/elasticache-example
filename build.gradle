@@ -1,0 +1,24 @@
+plugins {
+    id "java"
+}
+
+sourceCompatibility = 11
+targetCompatibility = 11
+compileJava.options.encoding = "UTF-8"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "io.lettuce:lettuce-core:5.3.1.RELEASE"
+}
+
+jar {
+    archiveBaseName = "elasticache"
+    manifest {
+        attributes "Main-Class": "example.Main"
+    }
+
+    configurations.compileClasspath.each { from zipTree(it) }
+}
