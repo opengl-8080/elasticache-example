@@ -14,31 +14,46 @@ public class Main {
 
     public static void main(String[] args) {
         final Map<String, String> argsMap = parse(args);
-        final boolean ssl = argsMap.getOrDefault("ssl", "false").equals("true");
-        final boolean tls = argsMap.getOrDefault("tls", "false").equals("true");
+        final String schema = argsMap.get("schema");
         final String host = argsMap.getOrDefault("host", "localhost");
         final int port = Integer.parseInt(argsMap.getOrDefault("port", "6379"));
         final String password = argsMap.get("password");
 
-        final RedisURI.Builder builder = RedisURI.builder()
-                .withHost(host)
-                .withPort(port);
-        
-        if (password != null) {
-            builder.withPassword(password);
+        final RedisURI uri;
+        if (schema == null) {
+            final RedisURI.Builder builder = RedisURI.builder()
+                    .withHost(host)
+                    .withPort(port);
+
+            if (password != null) {
+                builder.withPassword(password);
+            }
+            uri = builder.build();
+        } else {
+            String pass;
+            if (password == null) {
+                pass = "";
+            } else {
+                pass = password + "@";
+            }
+            uri = RedisURI.create(String.format("%s://%s%s:%d", schema, pass, host, port));
         }
+
+        final boolean ssl = argsMap.getOrDefault("ssl", "false").equals("true");
+        final boolean tls = argsMap.getOrDefault("tls", "false").equals("true");
         if (ssl) {
-            builder.withSsl(true);
+            uri.setSsl(true);
         }
+        
         if (tls) {
-            builder.withStartTls(true);
+            uri.setStartTls(true);
         }
+        
 
         final DefaultClientResources clientResources = DefaultClientResources.builder()
                 .dnsResolver(new DirContextDnsResolver())
                 .build();
 
-        final RedisURI uri = builder.build();
         System.out.println("uri = " + uri.toURI());
         
         final RedisClient client = RedisClient.create(clientResources, uri);
