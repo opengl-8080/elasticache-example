@@ -3,6 +3,8 @@ package example;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.resource.DefaultClientResources;
+import io.lettuce.core.resource.DirContextDnsResolver;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -16,9 +18,14 @@ public class Main {
         final String host = argsMap.getOrDefault("host", "localhost");
         final String port = argsMap.getOrDefault("port", "6379");
         final String password = argsMap.containsKey("password") ? argsMap.get("password") + "@" : "";
-        
+
+
+        final DefaultClientResources clientResources = DefaultClientResources.builder()
+                .dnsResolver(new DirContextDnsResolver())
+                .build();
+
         final RedisURI uri = RedisURI.create(String.format("%s://%s%s:%s", scheme, password, host, port));
-        final RedisClient client = RedisClient.create(uri);
+        final RedisClient client = RedisClient.create(clientResources, uri);
         final RedisCommands<String, String> commands = client.connect().sync();
         commands.set("message", "Hello at " + LocalDateTime.now());
         final String message = commands.get("message");
