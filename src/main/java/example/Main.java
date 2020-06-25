@@ -14,23 +14,25 @@ public class Main {
 
     public static void main(String[] args) {
         final Map<String, String> argsMap = parse(args);
-        final String scheme = argsMap.getOrDefault("scheme", "redis");
+        final boolean ssl = argsMap.getOrDefault("ssl", "false").equals("true");
+        final boolean tls = argsMap.getOrDefault("tls", "false").equals("true");
         final String host = argsMap.getOrDefault("host", "localhost");
-        final String port = argsMap.getOrDefault("port", "6379");
+        final int port = Integer.parseInt(argsMap.getOrDefault("port", "6379"));
         final String password = argsMap.get("password");
 
         final RedisURI.Builder builder = RedisURI.builder()
                 .withHost(host)
-                .withPort(Integer.parseInt(port));
+                .withPort(port);
         
         if (password != null) {
             builder.withPassword(password);
         }
-        
-        if (scheme.equals("rediss")) {
-            builder.withSsl(true).withStartTls(true);
+        if (ssl) {
+            builder.withSsl(true);
         }
-
+        if (tls) {
+            builder.withStartTls(true);
+        }
 
         final DefaultClientResources clientResources = DefaultClientResources.builder()
                 .dnsResolver(new DirContextDnsResolver())
