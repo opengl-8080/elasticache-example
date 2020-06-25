@@ -25,6 +25,9 @@ public class Main {
                 .build();
 
         final RedisURI uri = RedisURI.create(String.format("%s://%s%s:%s", scheme, password, host, port));
+        uri.setSsl(true);
+        uri.setStartTls(true);
+        
         final RedisClient client = RedisClient.create(clientResources, uri);
         final RedisCommands<String, String> commands = client.connect().sync();
         commands.set("message", "Hello at " + LocalDateTime.now());
