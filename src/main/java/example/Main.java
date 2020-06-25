@@ -17,16 +17,27 @@ public class Main {
         final String scheme = argsMap.getOrDefault("scheme", "redis");
         final String host = argsMap.getOrDefault("host", "localhost");
         final String port = argsMap.getOrDefault("port", "6379");
-        final String password = argsMap.containsKey("password") ? argsMap.get("password") + "@" : "";
+        final String password = argsMap.get("password");
+
+        final RedisURI.Builder builder = RedisURI.builder()
+                .withHost(host)
+                .withPort(Integer.parseInt(port));
+        
+        if (password != null) {
+            builder.withPassword(password);
+        }
+        
+        if (scheme.equals("rediss")) {
+            builder.withSsl(true).withStartTls(true);
+        }
 
 
         final DefaultClientResources clientResources = DefaultClientResources.builder()
                 .dnsResolver(new DirContextDnsResolver())
                 .build();
 
-        final RedisURI uri = RedisURI.create(String.format("%s://%s%s:%s", scheme, password, host, port));
-        uri.setSsl(true);
-        uri.setStartTls(true);
+        final RedisURI uri = builder.build();
+        System.out.println("uri = " + uri.toURI());
         
         final RedisClient client = RedisClient.create(clientResources, uri);
         final RedisCommands<String, String> commands = client.connect().sync();
